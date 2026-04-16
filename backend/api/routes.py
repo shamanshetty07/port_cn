@@ -48,22 +48,6 @@ async def list_ports(
     return {"ports": ports}
 
 
-@router.get("/ports/{port_id:path}")
-async def get_port(port_id: str):
-    """Get detailed information for a single port."""
-    port = await db.get_port(port_id)
-    if not port:
-        raise HTTPException(status_code=404, detail="Port not found")
-
-    # Add uptime info
-    parts = port_id.split(":")
-    if len(parts) == 2:
-        uptime = await state_store.get_uptime_since(parts[0], int(parts[1]))
-        port["uptime_since"] = uptime
-
-    return port
-
-
 @router.get("/ports/{port_id:path}/events")
 async def get_port_events(
     port_id: str,
@@ -79,6 +63,22 @@ async def get_port_events_24h(port_id: str):
     """Get all events for a port within the last 24 hours."""
     events = await db.get_events_24h(port_id)
     return {"events": events, "port_id": port_id}
+
+
+@router.get("/ports/{port_id:path}")
+async def get_port(port_id: str):
+    """Get detailed information for a single port."""
+    port = await db.get_port(port_id)
+    if not port:
+        raise HTTPException(status_code=404, detail="Port not found")
+
+    # Add uptime info
+    parts = port_id.split(":")
+    if len(parts) == 2:
+        uptime = await state_store.get_uptime_since(parts[0], int(parts[1]))
+        port["uptime_since"] = uptime
+
+    return port
 
 
 # ── Events ────────────────────────────────────────────────────
