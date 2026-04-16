@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  portorange:
+    build: .
+    container_name: portorange
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./config.yaml:/app/config.yaml:ro
+    environment:
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - WEBHOOK_URL=${WEBHOOK_URL:-}
+    restart: unless-stopped

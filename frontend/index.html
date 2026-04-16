@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PortOrange — Real-time network port status monitoring dashboard">
+    <title>PortOrange — Port Status Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍊</text></svg>">
+</head>
+<body>
+    <!-- ── Header ──────────────────────────────────────────── -->
+    <header id="app-header">
+        <div class="header-left">
+            <div class="logo">
+                <span class="logo-icon">🍊</span>
+                <h1>Port<span class="accent">Orange</span></h1>
+            </div>
+            <span class="version-badge">v2.0</span>
+        </div>
+        <div class="header-center">
+            <div class="stats-bar" id="stats-bar">
+                <div class="stat-item stat-up" id="stat-up">
+                    <span class="stat-dot dot-up"></span>
+                    <span class="stat-value" id="stat-up-value">0</span>
+                    <span class="stat-label">Up</span>
+                </div>
+                <div class="stat-item stat-down" id="stat-down">
+                    <span class="stat-dot dot-down"></span>
+                    <span class="stat-value" id="stat-down-value">0</span>
+                    <span class="stat-label">Down</span>
+                </div>
+                <div class="stat-item stat-unknown" id="stat-unknown">
+                    <span class="stat-dot dot-unknown"></span>
+                    <span class="stat-value" id="stat-unknown-value">0</span>
+                    <span class="stat-label">Unknown</span>
+                </div>
+                <div class="stat-item stat-flapping" id="stat-flapping">
+                    <span class="stat-dot dot-flapping"></span>
+                    <span class="stat-value" id="stat-flapping-value">0</span>
+                    <span class="stat-label">Flapping</span>
+                </div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="filter-group">
+                <label for="device-filter" class="filter-label">Device</label>
+                <select id="device-filter" class="filter-select">
+                    <option value="all">All Devices</option>
+                </select>
+            </div>
+            <div class="connection-indicator" id="ws-indicator">
+                <span class="ws-dot"></span>
+                <span class="ws-label">Connecting</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── Main Content ────────────────────────────────────── -->
+    <main id="main-content">
+        <div class="devices-container" id="devices-container">
+            <!-- Device groups rendered by JS -->
+            <div class="loading-state" id="loading-state">
+                <div class="loader"></div>
+                <p>Connecting to monitoring engine...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- ── Detail Panel (Slide-in) ─────────────────────────── -->
+    <div class="detail-overlay" id="detail-overlay"></div>
+    <aside class="detail-panel" id="detail-panel">
+        <div class="detail-header">
+            <div class="detail-title-area">
+                <h2 id="detail-port-name">Port Details</h2>
+                <span class="detail-port-id" id="detail-port-id"></span>
+            </div>
+            <button class="detail-close" id="detail-close" aria-label="Close detail panel">&times;</button>
+        </div>
+        <div class="detail-body">
+            <!-- Status Card -->
+            <div class="detail-status-card" id="detail-status-card">
+                <div class="detail-status-indicator" id="detail-status-indicator">
+                    <span class="detail-status-dot" id="detail-status-dot"></span>
+                    <span class="detail-status-text" id="detail-status-text">Unknown</span>
+                </div>
+                <div class="detail-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Device</span>
+                        <span class="meta-value" id="detail-device-name">—</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Interface</span>
+                        <span class="meta-value" id="detail-interface">—</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Speed</span>
+                        <span class="meta-value" id="detail-speed">—</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Criticality</span>
+                        <span class="meta-value" id="detail-criticality">—</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Uptime Since</span>
+                        <span class="meta-value" id="detail-uptime">—</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Last Change</span>
+                        <span class="meta-value" id="detail-last-change">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 24h Chart -->
+            <div class="detail-section">
+                <h3>24-Hour Timeline</h3>
+                <div class="chart-container" id="detail-chart-container">
+                    <canvas id="detail-chart" width="400" height="60"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Events -->
+            <div class="detail-section">
+                <h3>Recent Events</h3>
+                <div class="events-list" id="detail-events">
+                    <p class="no-events">No events recorded</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── Event Log Toast ─────────────────────────────────── -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ── Scripts ─────────────────────────────────────────── -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/charts.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/detail.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
